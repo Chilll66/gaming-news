@@ -42,29 +42,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Qui trovi le news fresche di giochi, uscite, serie TV e aggiornamenti. Niente noie finanziarie, solo hype puro! 🔥")
+st.write("Bella bro! Qui trovi le news fresche di giochi, uscite, serie TV e aggiornamenti. Hype puro! 🔥")
 
-# Barra laterale per i comandi
 with st.sidebar:
     st.header("🎮 Controlli")
-    # Filtriamo già la ricerca per evitare fatturati e soldi
-    query_base = st.text_input("Cosa cerchiamo?", "nuovi videogiochi uscite DLC trailer")
+    query_base = st.text_input("Cosa cerchiamo?", "brawl stars")
     cerca_btn = st.button("🔍 Cerca Notizie")
 
 def cerca_notizie(termine):
     try:
         results = []
-        # Aggiungiamo termini per scartare finanza/azioni
-        query_finale = f"{termine} -azioni -finanza -borsa -ricavi -fatturato"
         with DDGS() as ddgs:
-            for r in ddgs.text(query_finale, max_results=6):
-                titolo = r.get('title', '')
-                body = r.get('body', '')
-                url = r.get('href', '')
-                # Filtro extra di sicurezza anti-soldi nel titolo
-                parole_escluse = ['azioni', 'borsa', 'milioni di euro', 'fatturato', 'utili', 'ricavi']
-                if not any(p in titolo.lower() for p in parole_escluse):
-                    results.append({"titolo": titolo, "body": body, "url": url})
+            # Ricerca libera senza filtri bloccanti
+            for r in ddgs.text(termine, max_results=5):
+                titolo = r.get('title', 'Senza titolo')
+                body = r.get('body', 'Nessuna anteprima disponibile.')
+                url = r.get('href', '#')
+                results.append({"titolo": titolo, "body": body, "url": url})
         return results
     except Exception as e:
         return []
@@ -76,7 +70,6 @@ if cerca_btn:
     with st.spinner("Sto scandagliando il web alla ricerca di hype... 🚀"):
         st.session_state.notizie = cerca_notizie(query_base)
 
-# Sezione griglia a quadrati
 if st.session_state.notizie:
     st.subheader("📰 Seleziona la notizia da sbrogliare:")
     
@@ -90,7 +83,6 @@ if st.session_state.notizie:
             </div>
             """, unsafe_allow_html=True)
             
-            # Pulsante unico per ogni quadrato
             if st.button(f"✨ Genera Articolo Chill #{i+1}", key=f"gen_{i}"):
                 intro_list = [
                     "Yo bro, preparati a svoltare la giornata perché questa è una bomba pazzesca! 💣🔥",
@@ -100,23 +92,20 @@ if st.session_state.notizie:
                 ]
                 
                 corpo_list = [
-                    f"Analizzando la situa su *{n['titolo']}*, sembra proprio che gli sviluppatori abbiano deciso di spaccare tutto. 🛠️✨ Tra chicche succose ehype alle stelle, c'è da esaltarsi forte. 🚀",
+                    f"Analizzando la situa su *{n['titolo']}*, sembra proprio che ci sia parecchio movimento. 🛠️✨ Tra chicche succose e hype alle stelle, c'è da esaltarsi forte. 🚀",
                     f"Mettetevi comodi perché la novità fresca fresca riguarda *{n['titolo']}*. 🎯 Hype a mille e pad alla mano, qui c'è da divertirsi sul serio. 💯🎮",
                     f"Occhi puntati sullo schermo: le ultime news su *{n['titolo']}* promettono scintille. 🔥 Non so voi, ma io sto già sbroccando dalla scimmia! 🐒⚡"
                 ]
                 
-                out_intro = random.choice(intro_list)
-                out_corpo = random.choice(corpo_list)
-                
                 st.markdown(f"""
                 <div class="article-box">
                     <h3>📝 ARTICOLO GENERATO IN STILE GAMING</h3>
-                    <p style="font-size: 18px; line-height: 1.6;">{out_intro}</p>
-                    <p style="font-size: 16px; line-height: 1.6;">{out_corpo}</p>
-                    <p><b>Dettagli al volo:</b> {n['body']}</p>
+                    <p style="font-size: 18px; line-height: 1.6;">{random.choice(intro_list)}</p>
+                    <p style="font-size: 16px; line-height: 1.6;">{random.choice(corpo_list)}</p>
+                    <p><b>Info al volo:</b> {n['body']}</p>
                     <p>🎮 <i>Stay tuned e carichi per la prossima live! GG a tutti!</i> 🚀🔥</p>
                 </div>
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna news trovata o i filtri anti-finanza sono stati troppi stretti. Prova a cercare un altro gioco!")
+        st.warning("Nessun risultato trovato per questa ricerca. Prova a scrivere un altro titolo o gioco!")
