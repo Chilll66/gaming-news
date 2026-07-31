@@ -75,7 +75,7 @@ if st.session_state.notizie_trovate:
     if st.button("✨ Genera Testo Notizia (Stile Chill)"):
         st.markdown("---")
         st.subheader("📝 Articolo Generato:")
-        st.success(f"**Yo bro, beccati questa:**\n\Abbiamo analizzato la notizia selezionata: *\"{notizia_scelta}\"*. Sembra proprio che ci siano grosse novità in arrivo nel mondo del gaming. Preparate i pad perché qui la situazione si fa interessante!" )
+        st.success(f"**Yo bro, beccati questa:**\n\nAbbiamo analizzato la notizia selezionata: *\"{notizia_scelta}\"*. Sembra proprio che gli sviluppatori abbiano spaccato stavolta, preparate i pad!")
 else:
     if cerca_btn:
-        st.warning("Nessun risultato immediato trovato, prova a cambiare termine di ricerca nella barra laterale!") gli sviluppatori abbiano spaccato stavolta, preparate i pad!")
+        st.warning("Nessun risultato immediato trovato, prova a cambiare termine di ricerca nella barra laterale!")
