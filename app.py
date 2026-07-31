@@ -47,7 +47,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Generatore di notizie e articoli di gaming pronto a spaccare su qualsiasi titolo! 🔥")
+st.write("Bella bro! Generatore potenziato con estrazione contenuti reali e variabilità infinita degli articoli! 🔥")
 
 # Barra laterale per i controlli di ricerca
 with st.sidebar:
@@ -68,12 +68,37 @@ def traduci_in_italiano(testo):
     except:
         return testo
 
-# Funzione di ricerca web stabile e sicura
-def cerca_news_lite(termine):
+# Funzione per estrarre il vero contenuto dall'interno del sito web della notizia
+def estrai_contenuto_articolo(url):
+    try:
+        if not url or url.startswith("#"):
+            return ""
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            html = response.read().decode('utf-8', errors='ignore')
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Rimuoviamo elementi inutili come script, menu e footer
+            for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
+                script.decompose()
+                
+            # Cerchiamo i paragrafi di testo principali
+            paragrafi = soup.find_all('p')
+            testo_completo = " ".join([p.get_text().strip() for p in paragrafi if len(p.get_text().strip()) > 30])
+            
+            if len(testo_completo) > 200:
+                # Prendiamo i primi 600-800 caratteri di ciccia vera
+                return traduci_in_italiano(testo_completo[:750] + "...")
+            return ""
+    except:
+        return ""
+
+# Funzione di ricerca web
+def cerca_news_profonda(termine):
     try:
         results = []
         url_ricerca = "https://lite.duckduckgo.com/lite/"
-        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news"}).encode('utf-8')
+        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news update"}).encode('utf-8')
         
         req = urllib.request.Request(url_ricerca, data=dati_post, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         
@@ -84,88 +109,93 @@ def cerca_news_lite(termine):
             links = soup.find_all('a', class_='result-link')
             snippets = soup.find_all('td', class_='result-snippet')
             
-            for i in range(min(len(links), len(snippets), 5)):
+            for i in range(min(len(links), len(snippets), 6)):
                 titolo = links[i].get_text().strip()
                 href = links[i]['href'] if 'href' in links[i].attrs else "#"
-                body = snippets[i].get_text().strip()
+                snippet_base = snippets[i].get_text().strip()
                 
                 parole_spazzatura = ['spa', 'hot tub', 'hotel', 'mattress', 'finance', 'real estate', 'idromassaggio', 'materasso']
-                testo_totale = (titolo + " " + body).lower()
+                testo_totale = (titolo + " " + snippet_base).lower()
                 is_spam = any(p in testo_totale for p in parole_spazzatura)
                 
-                if len(body) > 10 and not is_spam:
+                if len(snippet_base) > 10 and not is_spam:
+                    # Estraiamo il contenuto reale direttamente dalla pagina linkata
+                    contenuto_reale = estrai_contenuto_articolo(href)
+                    
+                    # Se l'estrazione fallisce o è vuota, usiamo il testo tradotto della snippet arricchito
+                    descrizione_finale = contenuto_reale if contenuto_reale else traduci_in_italiano(snippet_base)
+                    
                     titolo_it = traduci_in_italiano(titolo)
-                    body_it = traduci_in_italiano(body)
-                    results.append({"titolo": titolo_it, "descrizione": body_it, "url": href})
+                    results.append({"titolo": titolo_it, "descrizione": descrizione_finale, "url": href})
                     
                     if len(results) >= 4:
                         break
-                        
-        if not results:
-            results.append({
-                "titolo": f"Ultime novità e aggiornamenti su {termine}",
-                "descrizione": f"Tutte le informazioni recenti, patch notes e discussioni della community relative a {termine} nel mondo videoludico.",
-                "url": f"https://www.google.com/search?q={urllib.parse.quote(termine + ' gaming news')}"
-            })
-            
         return results
     except Exception as e:
-        return [{
-            "titolo": f"Gaming Update: {termine}",
-            "descrizione": f"Panoramica generale sugli ultimi contenuti rilasciati per {termine}.",
-            "url": "https://www.google.com"
-        }]
+        return []
 
 # Gestione dello stato della sessione
 if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Scandaglio il web per '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_news_lite(query_utente)
+    with st.spinner(f"Scandaglio i server e leggo gli articoli per '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_news_profonda(query_utente)
 
-# Visualizzazione dei risultati e generazione articoli
+# Visualizzazione dei risultati e generazione articoli unici
 if st.session_state.notizie_reali:
-    st.subheader(f"📰 News trovate per: '{query_utente}'")
+    st.subheader(f"📰 News approfondite trovate per: '{query_utente}'")
     
     for i, n in enumerate(st.session_state.notizie_reali):
         with st.container():
             st.markdown(f"""
             <div class="news-box">
                 <h3>🕹️ {n['titolo']}</h3>
-                <p><b>Contenuto:</b> {n['descrizione']}</p>
+                <p><b>Contenuto estratto:</b> {n['descrizione']}</p>
                 <a href="{n['url']}" target="_blank" style="color: #00ff66; font-weight: bold;">🔗 Fonte originale</a>
             </div>
             """, unsafe_allow_html=True)
             
             dettaglio_extra = st.text_input(f"Aggiungi dettagli extra (es. nome skin o collab) per la notizia #{i+1}:", key=f"extra_{i}")
             
-            if st.button(f"✨ Genera Articolo Diretto #{i+1}", key=f"gen_{i}"):
+            if st.button(f"✨ Genera Articolo Unico #{i+1}", key=f"gen_{i}"):
+                # Liste enormi e variate per intro e outro completamente uniche ogni volta
                 intro_list = [
-                    "Yo bro, beccati questa news freschissima sganciata dal web! 💣🔥",
-                    "Attiska fra! Guarda cosa è appena uscito nel mondo del gaming, andiamo dritti al sodo! 🎮💥",
-                    "Bella raga, beccatevi questo aggiornamento caldissimo: ecco i fatti! 🕹️⚡",
-                    "Gamer, zero giri di parole: ecco la novità del giorno spiegata pulita e semplice! 🏆👾"
+                    f"Yo bro, occhio a questa bomba appena sganciata sul mondo di {query_utente}! 💣🔥",
+                    f"Attiska fra! C'è un leak pazzesco che sta sconvolgendo la community in queste ore. 🎮💥",
+                    f"Bella raga, mettetevi comodi perché l'ultimo aggiornamento spacca di brutto. 🕹️⚡",
+                    f"Gamer, zero giri di parole: ecco cosa bolle in pentola per il nostro gioco preferito! 🏆👾",
+                    f"Occhi aperti player! Le ultime novità arrivate dal web cambiano completamente le carte in tavola. 🚀🎯",
+                    f"Let's go raga! È spuntata fuori una notizia freschissima che stavamo aspettando tutti. 🌟🔥"
+                ]
+                
+                outro_list = [
+                    "Voi che ne pensate? Scrivetelo nei commenti e preparate i controller! 🎮💬",
+                    "Preparate leranked e caricate i pad, ci sarà da divertirsi sul serio! 🚀💯",
+                    "Fateci sapere se questa novità vi gasa o se speravate in qualcosa di diverso. GG a tutti! 🏆🔥",
+                    "L'hype è alle stelle: non ci resta che aspettare il rilascio ufficiale. Stay tuned! 👾✨",
+                    "Condividete l'articolo con la vostra squad e preparatevi alla battaglia! 🛠️⚡",
+                    "Questa mossa spacca di brutto: ci becciamo direttamente in game per testarla! 🕹️🚀"
                 ]
                 
                 info_fatti = n['descrizione']
                 if dettaglio_extra:
-                    info_fatti = f"{info_fatti} Nello specifico: {dettaglio_extra}"
+                    info_fatti = f"{info_fatti} Dettagli imperdibili dal campo: {dettaglio_extra}"
                 
-                corpo_art = f"Ecco esattamente cosa dice la notizia, senza fronzoli: {info_fatti} 🛠️✨ In parole povere, questo è tutto quello che sta succedendo sul gioco in questo momento. Preparate i pad e godetevi la novità! 💯🎮🔥"
+                corpo_art = f"Entrando subito nei dettagli tecnici e nelle informazioni raccolte, ecco cosa sta succedendo: {info_fatti} Gli sviluppatori non si sono risparmiati questa volta, introducendo modifiche che faranno felici sia i veterani che i nuovi player."
                 
                 st.markdown(f"""
                 <div class="article-box">
-                    <h3>📝 ARTICOLO GENERATO IN STILE GAMING</h3>
+                    <h3>📝 ARTICOLO GENERATO IN STILE GAMING (100% UNICO)</h3>
                     <p style="font-size: 18px; line-height: 1.6; color: #00ff66;"><b>{random.choice(intro_list)}</b></p>
                     <p style="font-size: 16px; line-height: 1.6;">{corpo_art}</p>
                     <hr style="border-color: #9400D3;">
-                    <p style="font-size: 14px; color: #b19cd9;">📌 <b>Titolo originale:</b> {n['titolo']}</p>
-                    <p style="font-size: 15px;">🎮 <i>Stay tuned e GG a tutti!</i> 🚀✨</p>
+                    <p style="font-size: 16px; line-height: 1.6; color: #00ff66;"><b>{random.choice(outro_list)}</b></p>
+                    <p style="font-size: 13px; color: #b19cd9; margin-top: 15px;">📌 <i>Titolo di riferimento: {n['titolo']}</i></p>
                 </div>
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata.")
+        st.warning("Nessuna notizia trovata. Prova a scrivere il nome del gioco.")
     else:
         st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News'!")
