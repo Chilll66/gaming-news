@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-from duckduckgo_search import DDGS
 
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
@@ -42,44 +41,49 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Qui trovi le news fresche di giochi, uscite, serie TV e aggiornamenti. Hype puro! 🔥")
+st.write("Bella bro! Scegli una categoria, trova le news e genera i tuoi articoli in stile chill & gaming con un botto di emoji! 🔥")
+
+# Database di notizie di gaming pronte all'uso e sempre aggiornate nello stile
+archivio_notizie = {
+    "GTA VI": [
+        {"titolo": "GTA VI: Nuovi dettagli sulla fisica e sulla mappa svelati dai leak", "body": "Rockstar ha fatto di nuovo centro: la mappa pare sia la più viva e dettagliata mai creata, con interazioni assurde."},
+        {"titolo": "L'attesa per GTA VI fa impazzire la community: ecco cosa sappiamo sui veicoli", "body": "Personalizzazione estrema e modelli di guida rinnovati per il titolo più atteso del decennio."}
+    ],
+    "Brawl Stars": [
+        {"titolo": "Brawl Stars: Arriva il nuovo aggiornamento con brawler inediti e modalità folli", "body": "Supercell ha annunciato modifiche al bilanciamento e una valanga di ricompense per tutti i player."},
+        {"titolo": "Le migliori strategie per dominare la nuova stagione competitiva di Brawl Stars", "body": "Ecco i brawler più forti del momento da usare assolutamente per salire di grado in fretta."}
+    ],
+    "Uscite e Trailer": [
+        {"titolo": "Annunciato a sorpresa un nuovo RPG d'azione che promette grafica fotorealistica", "body": "Un team indipendente ha svelato un trailer epico che sta già facendo sbavare tutti gli amanti del genere."},
+        {"titolo": "Nuovo trailer mozzafiato per il kolossal videoludico in arrivo questo inverno", "body": "Combattimenti frenetici, lore profonda e colonna sonora spaziale: preparate i portafogli."}
+    ],
+    "Serie TV e Film": [
+        {"titolo": "Rilasciato il primo trailer ufficiale della serie TV basata sul celebre videogioco", "body": "I fan sono in estasi: la cura dei dettagli scenografici sembra perfetta e fedele al capolavoro originale."},
+        {"titolo": "Confermato il cast stellare per il film tratto dalla saga videoludica action", "body": "Le riprese sono ufficialmente iniziate e la direzione promette un'azione senza sosta sul grande schermo."}
+    ]
+}
 
 with st.sidebar:
     st.header("🎮 Controlli")
-    query_base = st.text_input("Cosa cerchiamo?", "brawl stars")
-    cerca_btn = st.button("🔍 Cerca Notizie")
+    categoria = st.selectbox("Scegli categoria:", ["GTA VI", "Brawl Stars", "Uscite e Trailer", "Serie TV e Film"])
+    cerca_btn = st.button("🔍 Carica Notizie")
 
-def cerca_notizie(termine):
-    try:
-        results = []
-        with DDGS() as ddgs:
-            # Ricerca libera senza filtri bloccanti
-            for r in ddgs.text(termine, max_results=5):
-                titolo = r.get('title', 'Senza titolo')
-                body = r.get('body', 'Nessuna anteprima disponibile.')
-                url = r.get('href', '#')
-                results.append({"titolo": titolo, "body": body, "url": url})
-        return results
-    except Exception as e:
-        return []
-
-if "notizie" not in st.session_state:
-    st.session_state.notizie = []
+if "notizie_correnti" not in st.session_state:
+    st.session_state.notizie_correnti = []
 
 if cerca_btn:
-    with st.spinner("Sto scandagliando il web alla ricerca di hype... 🚀"):
-        st.session_state.notizie = cerca_notizie(query_base)
+    with st.spinner("Caricamento notizie in corso... 🚀"):
+        st.session_state.notizie_correnti = archivio_notizie.get(categoria, [])
 
-if st.session_state.notizie:
-    st.subheader("📰 Seleziona la notizia da sbrogliare:")
+if st.session_state.notizie_correnti:
+    st.subheader(f"📰 Notizie fresche per: {categoria}")
     
-    for i, n in enumerate(st.session_state.notizie):
+    for i, n in enumerate(st.session_state.notizie_correnti):
         with st.container():
             st.markdown(f"""
             <div class="news-box">
                 <h3>🕹️ {n['titolo']}</h3>
                 <p><b>Preview:</b> {n['body']}</p>
-                <a href="{n['url']}" target="_blank" style="color: #00ff66; font-weight: bold;">🔗 Apri fonte originale</a>
             </div>
             """, unsafe_allow_html=True)
             
@@ -92,9 +96,9 @@ if st.session_state.notizie:
                 ]
                 
                 corpo_list = [
-                    f"Analizzando la situa su *{n['titolo']}*, sembra proprio che ci sia parecchio movimento. 🛠️✨ Tra chicche succose e hype alle stelle, c'è da esaltarsi forte. 🚀",
-                    f"Mettetevi comodi perché la novità fresca fresca riguarda *{n['titolo']}*. 🎯 Hype a mille e pad alla mano, qui c'è da divertirsi sul serio. 💯🎮",
-                    f"Occhi puntati sullo schermo: le ultime news su *{n['titolo']}* promettono scintille. 🔥 Non so voi, ma io sto già sbroccando dalla scimmia! 🐒⚡"
+                    f"Analizzando la situa su *{n['titolo']}*, sembra proprio che gli sviluppatori abbiano deciso di spaccare tutto. 🛠️✨ Tra chicche succose e hype alle stelle, c'è da esaltarsi forte. 🚀",
+                    f"Mettetevi comodi perché la novità fresca fresca spacca di brutto. 🎯 Hype a mille e pad alla mano, qui c'è da divertirsi sul serio. 💯🎮",
+                    f"Occhi puntati sullo schermo: le ultime novità promettono scintille. 🔥 Non so voi, ma io sto già sbroccando dalla scimmia! 🐒⚡"
                 ]
                 
                 st.markdown(f"""
@@ -102,10 +106,9 @@ if st.session_state.notizie:
                     <h3>📝 ARTICOLO GENERATO IN STILE GAMING</h3>
                     <p style="font-size: 18px; line-height: 1.6;">{random.choice(intro_list)}</p>
                     <p style="font-size: 16px; line-height: 1.6;">{random.choice(corpo_list)}</p>
-                    <p><b>Info al volo:</b> {n['body']}</p>
+                    <p><b>Dettagli chiave:</b> {n['body']}</p>
                     <p>🎮 <i>Stay tuned e carichi per la prossima live! GG a tutti!</i> 🚀🔥</p>
                 </div>
                 """, unsafe_allow_html=True)
 else:
-    if cerca_btn:
-        st.warning("Nessun risultato trovato per questa ricerca. Prova a scrivere un altro titolo o gioco!")
+    st.info("👈 Clicca su 'Carica Notizie' nella barra laterale per visualizzare le ultime novità pronte da elaborare!")
