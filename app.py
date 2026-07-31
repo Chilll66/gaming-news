@@ -5,8 +5,10 @@ import json
 import urllib.parse
 from bs4 import BeautifulSoup
 
+# Configurazione della pagina
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
+# Stile Grafico Cyberpunk
 st.markdown("""
     <style>
     .stApp {
@@ -45,13 +47,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Motore di ricerca potenziato e stabilizzato: pronto a spaccare su qualsiasi gioco! 🔥")
+st.write("Bella bro! Generatore di notizie e articoli di gaming pronto a spaccare su qualsiasi titolo! 🔥")
 
+# Barra laterale per i controlli di ricerca
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
     query_utente = st.text_input("Cosa vuoi cercare?", "Brawl Stars")
     cerca_btn = st.button("🔍 Cerca News")
 
+# Funzione di traduzione automatica in italiano
 def traduci_in_italiano(testo):
     try:
         if not testo:
@@ -64,45 +68,63 @@ def traduci_in_italiano(testo):
     except:
         return testo
 
-def cerca_news_sicura(termine):
+# Funzione di ricerca web stabile e sicura
+def cerca_news_lite(termine):
     try:
         results = []
-        url_ricerca = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(termine + ' gaming news')}"
-        req = urllib.request.Request(url_ricerca, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+        url_ricerca = "https://lite.duckduckgo.com/lite/"
+        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news"}).encode('utf-8')
+        
+        req = urllib.request.Request(url_ricerca, data=dati_post, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         
         with urllib.request.urlopen(req) as response:
             html = response.read().decode('utf-8')
             soup = BeautifulSoup(html, 'html.parser')
             
-            for a in soup.find_all('a', class_='result__snippet', limit=6):
-                body = a.get_text()
-                parent = a.find_parent('div', class_='result')
-                link_a = parent.find('a', class_='result__title') if parent else None
-                titolo = link_a.get_text().strip() if link_a else "Notizia Gaming"
-                href = link_a['href'] if link_a and 'href' in link_a.attrs else "#"
+            links = soup.find_all('a', class_='result-link')
+            snippets = soup.find_all('td', class_='result-snippet')
+            
+            for i in range(min(len(links), len(snippets), 5)):
+                titolo = links[i].get_text().strip()
+                href = links[i]['href'] if 'href' in links[i].attrs else "#"
+                body = snippets[i].get_text().strip()
                 
                 parole_spazzatura = ['spa', 'hot tub', 'hotel', 'mattress', 'finance', 'real estate', 'idromassaggio', 'materasso']
                 testo_totale = (titolo + " " + body).lower()
                 is_spam = any(p in testo_totale for p in parole_spazzatura)
                 
-                if len(body) > 20 and not is_spam:
+                if len(body) > 10 and not is_spam:
                     titolo_it = traduci_in_italiano(titolo)
                     body_it = traduci_in_italiano(body)
                     results.append({"titolo": titolo_it, "descrizione": body_it, "url": href})
                     
                     if len(results) >= 4:
                         break
+                        
+        if not results:
+            results.append({
+                "titolo": f"Ultime novità e aggiornamenti su {termine}",
+                "descrizione": f"Tutte le informazioni recenti, patch notes e discussioni della community relative a {termine} nel mondo videoludico.",
+                "url": f"https://www.google.com/search?q={urllib.parse.quote(termine + ' gaming news')}"
+            })
+            
         return results
     except Exception as e:
-        return [{"titolo": f"Novità ufficiali su {termine}", "descrizione": f"Tutti gli ultimi aggiornamenti, eventi e novità recenti riguardanti {termine} nel mondo del gaming.", "url": "https://www.google.com"}]
+        return [{
+            "titolo": f"Gaming Update: {termine}",
+            "descrizione": f"Panoramica generale sugli ultimi contenuti rilasciati per {termine}.",
+            "url": "https://www.google.com"
+        }]
 
+# Gestione dello stato della sessione
 if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
     with st.spinner(f"Scandaglio il web per '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_news_sicura(query_utente)
+        st.session_state.notizie_reali = cerca_news_lite(query_utente)
 
+# Visualizzazione dei risultati e generazione articoli
 if st.session_state.notizie_reali:
     st.subheader(f"📰 News trovate per: '{query_utente}'")
     
@@ -147,4 +169,3 @@ else:
         st.warning("Nessuna notizia trovata.")
     else:
         st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News'!")
-        
