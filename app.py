@@ -44,12 +44,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Ricerca avanzata attiva: adesso scansiona update, patch e novità delle ultime tre settimane per qualsiasi gioco! 🔥")
+st.write("Bella bro! Motore di ricerca sbloccato e super rapido: trova qualsiasi notizia di gaming in un attimo! 🔥")
 
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
-    query_utente = st.text_input("Cosa vuoi cercare?", "Brawl Stars")
-    cerca_btn = st.button("🔍 Cerca News (Ultime 3 Settimane)")
+    query_utente = st.text_input("Cosa vuoi cercare?", "Brawl Stars aggiornamento")
+    cerca_btn = st.button("🔍 Cerca News")
 
 def traduci_in_italiano(testo):
     try:
@@ -63,21 +63,19 @@ def traduci_in_italiano(testo):
     except:
         return testo
 
-def cerca_news_avanzata(termine):
+def cerca_news_libera(termine):
     try:
         results = []
         with DDGS() as ddgs:
-            # Cerchiamo combinando il gioco con termini chiave di aggiornamento ed eventi delle ultime 3 settimane ('m')
-            query_mirata = f"{termine} (update OR patch OR news OR evento OR skin)"
-            for r in ddgs.text(query_mirata, max_results=8, timelimit='m'):
+            # Ricerca pulita e diretta senza comandi rigidi che bloccano i risultati
+            for r in ddgs.text(f"{termine} gaming", max_results=8):
                 titolo = r.get('title', '')
                 body = r.get('body', '')
                 url = r.get('href', '#')
                 
-                # Filtro anti-spam per bloccare siti fuffa o pubblicità
+                # Filtro anti-spam per scartare idromassaggi o roba non inerenti
                 parole_spazzatura = ['spa', 'hot tub', 'hotel', 'mattress', 'finance', 'real estate', 'idromassaggio', 'materasso']
                 testo_totale = (titolo + " " + body).lower()
-                
                 is_spam = any(parola in testo_totale for parola in parole_spazzatura)
                 
                 if len(body) > 20 and not is_spam:
@@ -95,11 +93,11 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Cerco gli ultimi aggiornamenti su '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_news_avanzata(query_utente)
+    with st.spinner(f"Cerco al volo sul web per '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_news_libera(query_utente)
 
 if st.session_state.notizie_reali:
-    st.subheader(f"📰 News delle ultime 3 settimane per: '{query_utente}'")
+    st.subheader(f"📰 News trovate per: '{query_utente}'")
     
     for i, n in enumerate(st.session_state.notizie_reali):
         with st.container():
@@ -115,17 +113,17 @@ if st.session_state.notizie_reali:
             
             if st.button(f"✨ Genera Articolo Diretto #{i+1}", key=f"gen_{i}"):
                 intro_list = [
-                    "Yo bro, beccati questa news freschissima uscita in questo ultimo periodo! 💣🔥",
+                    "Yo bro, beccati questa news freschissima sganciata dal web! 💣🔥",
                     "Attiska fra! Guarda cosa è appena uscito nel mondo del gaming, andiamo dritti al sodo! 🎮💥",
                     "Bella raga, beccatevi questo aggiornamento caldissimo: ecco i fatti! 🕹️⚡",
-                    "Gamer, zero giri di parole: ecco la novità del mese spiegata pulita e semplice! 🏆👾"
+                    "Gamer, zero giri di parole: ecco la novità del giorno spiegata pulita e semplice! 🏆👾"
                 ]
                 
                 info_fatti = n['descrizione']
                 if dettaglio_extra:
                     info_fatti = f"{info_fatti} Nello specifico: {dettaglio_extra}"
                 
-                corpo_art = f"Ecco esattamente cosa dice la notizia, senza fronzoli: {info_fatti} 🛠️✨ In parole povere, questo è tutto quello che sta succedendo sul gioco in questi giorni. Preparate i pad e godetevi la novità! 💯🎮🔥"
+                corpo_art = f"Ecco esattamente cosa dice la notizia, senza fronzoli: {info_fatti} 🛠️✨ In parole povere, questo è tutto quello che sta succedendo sul gioco in questo momento. Preparate i pad e godetevi la novità! 💯🎮🔥"
                 
                 st.markdown(f"""
                 <div class="article-box">
@@ -139,6 +137,6 @@ if st.session_state.notizie_reali:
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata per questa ricerca. Prova a scrivere il nome del gioco insieme a 'aggiornamento'!")
+        st.warning("Nessuna notizia trovata. Prova a scrivere un termine di ricerca leggermente diverso!")
     else:
-        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News (Ultime 3 Settimane)'!")
+        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News'!")
