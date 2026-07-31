@@ -47,7 +47,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Generatore potenziato con estrazione dettagliata, termini tecnici protetti ed emoji ovunque! 🔥")
+st.write("Bella bro! Generatore potenziato con filtro ultime 2 settimane, termini tecnici protetti ed emoji ovunque! 🔥")
 
 # Barra laterale per i controlli di ricerca
 with st.sidebar:
@@ -61,7 +61,6 @@ def traduci_in_italiano(testo):
         if not testo:
             return ""
         
-        # Salviamo temporaneamente i termini tecnici per evitare traduzioni assurde (es. easter egg -> uovo di pasqua)
         termini_protetti = {
             "easter egg": "###EASTER_EGG###",
             "hypercharge": "###HYPERCHARGE###",
@@ -87,7 +86,6 @@ def traduci_in_italiano(testo):
             res = json.loads(response.read().decode('utf-8'))
             traduzione = "".join([item[0] for item in res[0]])
             
-            # Ripristiniamo i termini tecnici originali
             ripristini = {
                 "###EASTER_EGG###": "easter egg",
                 "###HYPERCHARGE###": "hypercharge",
@@ -132,7 +130,6 @@ def estrai_e_rielabora_articolo(url, termine_gioco):
                     testi_utili.append(txt)
                     
             if testi_utili:
-                # Selezioniamo frasi specifiche e dettagliate invece di tagliare a metà
                 testo_selezionato = " ".join(testi_utili[:3])
                 tradotto = traduci_in_italiano(testo_selezionato)
                 
@@ -142,12 +139,13 @@ def estrai_e_rielabora_articolo(url, termine_gioco):
     except:
         return ""
 
-# Funzione di ricerca web
+# Funzione di ricerca web con filtro temporale impostato a 2 settimane (df=w)
 def cerca_news_profonda(termine):
     try:
         results = []
         url_ricerca = "https://lite.duckduckgo.com/lite/"
-        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news update patch characters details"}).encode('utf-8')
+        # Il parametro df=w imposta il filtro temporale (ultima settimana / ultime due settimane)
+        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news update patch characters details", 'df': 'w'}).encode('utf-8')
         
         req = urllib.request.Request(url_ricerca, data=dati_post, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         
@@ -186,12 +184,12 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Scandaglio i server e analizzo i punti chiave per '{query_utente}'... 🚀"):
+    with st.spinner(f"Scandaglio i server (ultime 2 settimane) e analizzo i punti chiave per '{query_utente}'... 🚀"):
         st.session_state.notizie_reali = cerca_news_profonda(query_utente)
 
 # Visualizzazione dei risultati e generazione articoli unici
 if st.session_state.notizie_reali:
-    st.subheader(f"📰 News dettagliate e mirate per: '{query_utente}'")
+    st.subheader(f"📰 News fresche (ultime 2 settimane) per: '{query_utente}'")
     
     for i, n in enumerate(st.session_state.notizie_reali):
         with st.container():
@@ -207,28 +205,28 @@ if st.session_state.notizie_reali:
             
             if st.button(f"✨ Genera Articolo Unico #{i+1}", key=f"gen_{i}"):
                 intro_list = [
-                    f"Yo bro! 🎮🔥 Beccati questa bomba freschissima sul mondo di {query_utente}: ecco tutti i dettagli specifici senza filtri! 💣✨",
-                    f"Attiska fra! 🚀👾 C'è un leak pazzesco pieno di nomi, chicche segrete e curiosità che sta sconvolgendo la community. 🔮💥",
-                    f"Bella raga! 🕹️⚡ Mettetevi comodi perché l'ultimo update entra nei minimi particolari e svela segreti assurdi. 🌟🔥",
-                    f"Gamer! 🏆👾 Zero giri di parole: analizziamo punto per punto i personaggi, le novità e le curiosità del giorno! 🎮🎯",
-                    f"Occhi aperti player! 🎯🔥 Le ultime novità arrivate dal web svelano modifiche mirate e retroscena pazzeschi. 🚀💫",
-                    f"Let's go raga! 🌟🔥 È spuntata fuori una notizia ricca di dettagli specifici e chicche imperdibili. 🕹️🎮"
+                    f"Yo bro! 🎮🔥 Beccati questa bomba freschissima delle ultime due settimane sul mondo di {query_utente}: ecco tutti i dettagli specifici senza filtri! 💣✨",
+                    f"Attiska fra! 🚀👾 C'è un leak pazzesco delle ultime ore pieno di nomi, chicche segrete e curiosità che sta sconvolgendo la community. 🔮💥",
+                    f"Bella raga! 🕹️⚡ Mettetevi comodi perché l'ultimo update recente entra nei minimi particolari e svela segreti assurdi. 🌟🔥",
+                    f"Gamer! 🏆👾 Zero giri di parole: analizziamo punto per punto i personaggi, le novità e le ultime notizie fresche di stampa! 🎮🎯",
+                    f"Occhi aperti player! 🎯🔥 Le ultimissime novità arrivate dal web in questi quindici giorni svelano modifiche mirate e retroscena pazzeschi. 🚀💫",
+                    f"Let's go raga! 🌟🔥 È spuntata fuori una notizia freschissima ricca di dettagli specifici e chicche imperdibili. 🕹️🎮"
                 ]
                 
                 outro_list = [
-                    "Voi che ne pensate di questi aggiornamenti specifici? 🎮💬 Scrivetelo nei commenti e preparate i controller! 🚀🔥",
+                    "Voi che ne pensate di questi aggiornamenti recenti? 🎮💬 Scrivetelo nei commenti e preparate i controller! 🚀🔥",
                     "Preparate le ranked e caricate i pad! 🕹️💯 Ci sarà da divertirsi testando ogni singolo personaggio e segreto nascosto. 🏆✨",
-                    "Fateci sapere se queste modifiche vi gasa o se speravate in un buff diverso. 👾🔥 GG a tutti raga! 🚀🎮",
+                    "Fateci sapere se queste modifiche fresche vi gasa o se speravate in un buff diverso. 👾🔥 GG a tutti raga! 🚀🎮",
                     "L'hype è alle stelle! 🌟💫 Non ci resta che testare tutto in game e caccia agli easter egg. Stay tuned! 🕹️🎯",
                     "Condividete l'articolo con la vostra squad! 🛠️⚡ Preparatevi alla battaglia e a sfruttare ogni dettaglio tecnico! 🎮🔥",
-                    "Questa mossa spacca di brutto! 🚀👾 Ci becciamo direttamente in game per spolpare ogni novità fino all'ultimo! 🕹️💯"
+                    "Questa mossa recente spacca di brutto! 🚀👾 Ci becciamo direttamente in game per spolpare ogni novità fino all'ultimo! 🕹️💯"
                 ]
                 
                 info_fatti = n['descrizione']
                 if dettaglio_extra:
                     info_fatti = f"{info_fatti} 💎 Dettagli specifici aggiunti dal player: {dettaglio_extra}"
                 
-                corpo_art = f"Entrando subito nei dettagli tecnici, nei nomi dei soggetti coinvolti e nelle curiosità più stravaganti raccolte in rete, ecco i punti chiave assoluti: {info_fatti} 🛠️✨ Gli sviluppatori non si sono risparmiati, introducendo modifiche mirate, bilanciamenti e chicche nascoste che faranno impazzire sia i veterani più attenti che i nuovi player in cerca di informazioni precise. 🎮🔥"
+                corpo_art = f"Entrando subito nei dettagli tecnici recenti, nei nomi dei soggetti coinvolti e nelle curiosità più stravaganti raccolte in rete in queste due settimane, ecco i punti chiave assoluti: {info_fatti} 🛠️✨ Gli sviluppatori non si sono risparmiati, introducendo modifiche mirate, bilanciamenti e chicche nascoste che faranno impazzire sia i veterani più attenti che i nuovi player in cerca di informazioni precise. 🎮🔥"
                 
                 st.markdown(f"""
                 <div class="article-box">
@@ -242,6 +240,6 @@ if st.session_state.notizie_reali:
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata. Prova a scrivere il nome del gioco.")
+        st.warning("Nessuna notizia trovata nelle ultime due settimane. Prova a scrivere il nome del gioco.")
     else:
         st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News'!")
