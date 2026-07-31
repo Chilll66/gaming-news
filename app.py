@@ -1,7 +1,6 @@
 import streamlit as st
 import random
 from duckduckgo_search import DDGS
-from deep_translator import GoogleTranslator
 
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
@@ -43,36 +42,25 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Cerchiamo ovunque nel mondo le notizie di oggi e ieri, le traduciamo in italiano e le spieghiamo dritte al punto, senza perdite di tempo! 🔥")
+st.write("Bella bro! Cerchiamo le notizie di oggi e ieri in italiano, dritte al punto e senza perdite di tempo! 🔥")
 
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
     query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin update")
-    cerca_btn = st.button("🔍 Cerca News Globali")
+    cerca_btn = st.button("🔍 Cerca News di Oggi")
 
-def traduci_testo(testo):
-    try:
-        if testo and len(testo) > 2:
-            return GoogleTranslator(source='auto', target='it').translate(testo)
-    except:
-        pass
-    return testo
-
-def cerca_news_globali(termine):
+def cerca_news_italiane(termine):
     try:
         results = []
-        # Cerchiamo su tutto il web globale ma imponiamo il filtro temporale rigoroso sulle ultime 24 ore ('d')
+        # Cerchiamo direttamente impostando la regione in italiano per avere risultati puliti e nativi
         with DDGS() as ddgs:
-            for r in ddgs.text(f"{termine} gaming news", max_results=5, timelimit='d'):
-                titolo_raw = r.get('title', '')
-                body_raw = r.get('body', '')
+            for r in ddgs.text(f"{termine} gaming news", max_results=5, region='it-it', timelimit='d'):
+                titolo = r.get('title', '')
+                body = r.get('body', '')
                 url = r.get('href', '#')
                 
-                if len(body_raw) > 30:
-                    # Traduciamo titolo e corpo direttamente in italiano
-                    titolo_it = traduci_testo(titolo_raw)
-                    body_it = traduci_testo(body_raw)
-                    results.append({"titolo": titolo_it, "descrizione": body_it, "url": url})
+                if len(body) > 30:
+                    results.append({"titolo": titolo, "descrizione": body, "url": url})
         return results
     except Exception as e:
         return []
@@ -81,8 +69,8 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Scandaglio il web mondiale per trovare le ultime novità su '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_news_globali(query_utente)
+    with st.spinner(f"Scandaglio il web per trovare le ultime novità su '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_news_italiane(query_utente)
 
 if st.session_state.notizie_reali:
     st.subheader(f"📰 News freschissime per: '{query_utente}'")
@@ -101,13 +89,12 @@ if st.session_state.notizie_reali:
             
             if st.button(f"✨ Genera Articolo Diretto #{i+1}", key=f"gen_{i}"):
                 intro_list = [
-                    "Yo bro, beccati questa news freschissima appena tradotta e sganciata dal web! 💣🔥",
+                    "Yo bro, beccati questa news freschissima uscita nelle ultime ore! 💣🔥",
                     "Attiska fra! Guarda cosa è appena uscito nel mondo, andiamo dritti al sodo! 🎮💥",
-                    "Bella raga, beccatevi questo aggiornamento caldissimo tradotto al volo: ecco i fatti! 🕹️⚡",
+                    "Bella raga, beccatevi questo aggiornamento caldissimo: ecco i fatti! 🕹️⚡",
                     "Gamer, zero giri di parole: ecco la novità del giorno spiegata pulita e semplice! 🏆👾"
                 ]
                 
-                # Montiamo il testo basandoci ESATTAMENTE sui dati reali della notizia senza riempitivi inutili
                 info_fatti = n['descrizione']
                 if dettaglio_extra:
                     info_fatti = f"{info_fatti} Nello specifico: {dettaglio_extra}"
@@ -126,6 +113,6 @@ if st.session_state.notizie_reali:
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata nelle ultime ore per questa ricerca. Prova a cambiare parole chiave o a scrivere il nome del gioco in inglese!")
+        st.warning("Nessuna notizia trovata nelle ultime ore per questa ricerca. Prova a cambiare parole chiave o a scrivere il nome del gioco in modo più generale!")
     else:
-        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News Globali'!")
+        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News di Oggi'!")
