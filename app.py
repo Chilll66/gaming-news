@@ -42,20 +42,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Scrivi qualsiasi gioco o argomento: l'app pescherà le notizie vere di oggi e ieri dal web per trasformarle in articoli dettagliati, semplici e pieni di emoji! 🔥")
+st.write("Bella bro! Scrivi qualsiasi gioco o argomento: l'app pescherà i dettagli specifici di oggi e ieri dal web (collaborazioni, skin, aggiornamenti) e li trasformerà in articoli epici, semplici e pieni di emoji! 🔥")
 
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
-    query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite")
-    cerca_btn = st.button("🔍 Cerca News di Oggi")
+    query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin")
+    cerca_btn = st.button("🔍 Cerca News Dettagliate")
 
-def cerca_notizie_reali(termine):
+def cerca_notizie_specifiche(termine):
     try:
         results = []
         with DDGS() as ddgs:
-            for r in ddgs.text(f"{termine} videogame news", max_results=4, timelimit='d'):
+            # Cerchiamo con termini specifici per catturare dettagli, skin e collaborazioni
+            for r in ddgs.text(f"{termine} dettagli skin collaborazione aggiornamento", max_results=4, timelimit='d'):
                 titolo = r.get('title', 'Notizia gaming')
-                body = r.get('body', 'Nessun dettaglio disponibile.')
+                body = r.get('body', 'Nessun dettaglio specifico disponibile.')
                 url = r.get('href', '#')
                 results.append({"titolo": titolo, "descrizione": body, "url": url})
         return results
@@ -66,36 +67,34 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Sto scandagliando il web per trovare le novità di oggi su '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_notizie_reali(query_utente)
+    with st.spinner(f"Sto analizzando a fondo il web per trovare tutti i dettagli su '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_notizie_specifiche(query_utente)
 
 if st.session_state.notizie_reali:
-    st.subheader(f"📰 Notizie fresche (Oggi/Ieri) per: '{query_utente}'")
+    st.subheader(f"📰 Notizie specifiche e dettagliate per: '{query_utente}'")
     
     for i, n in enumerate(st.session_state.notizie_reali):
         with st.container():
             st.markdown(f"""
             <div class="news-box">
                 <h3>🕹️ {n['titolo']}</h3>
-                <p><b>Cosa dice la notizia:</b> {n['descrizione']}</p>
-                <a href="{n['url']}" target="_blank" style="color: #00ff66; font-weight: bold;">🔗 Fonte originale</a>
+                <p><b>Contenuto specifico:</b> {n['descrizione']}</p>
+                <a href="{n['url']}" target="_blank" style="color: #00ff66; font-weight: bold;">🔗 Fonte originale completa</a>
             </div>
             """, unsafe_allow_html=True)
             
             if st.button(f"✨ Genera Articolo Dettagliato #{i+1}", key=f"gen_{i}"):
-                # Lista enorme di intro tutte diverse per non ripetersi mai
                 intro_list = [
-                    "Yo bro, beccati questa bomba freschissima uscita proprio tra ieri e oggi! 💣🔥",
-                    "Madonna fra! Guarda cosa è appena successo nel mondo del gaming, notizia caldissima! 🎮💥",
-                    "Bella raga, c'è un aggiornamento pazzesco che è uscito in queste ore: facciamo il punto! 🕹️⚡",
-                    "Gamer di tutto il mondo, occhi aperti: ecco la novità del giorno spiegata semplice! 🏆👾",
-                    "Attiska fra! Questa ti farà saltare dalla sedia, guarda che chicca è appena arrivata! 🚀🔥",
-                    "Raga, tenetevi forte perché quello che sta succedendo in queste ore ha dell'incredibile! 🎯💯",
-                    "Occhi allo schermo player! Tra ieri e oggi è uscita una news che spacca letteralmente i server! 🌐✨",
-                    "Bella zio! Preparati i popcorn e il pad, perché la novità fresca di oggi è pura roba da pro! 🎮👑"
+                    "Yo bro, beccati questa bomba freschissima con tutti i dettagli precisi usciti in queste ore! 💣🔥",
+                    "Madonna fra! Guarda che roba assurda è appena stata svelata nel mondo del gaming, entriamo subito nel vivo! 🎮💥",
+                    "Bella raga, ci sono novità pazzesche e super specifiche: ecco esattamente cosa sta succedendo! 🕹️⚡",
+                    "Gamer di tutto il mondo, occhi aperti: ecco il report completo e dettagliato della notizia del giorno! 🏆👾",
+                    "Attiska fra! Questa è una chicca imperdibile, beccati tutti i retroscena e le novità svelate! 🚀🔥",
+                    "Raga, tenetevi forte perché abbiamo tutti i dettagli succosi di questa news appena sfornata! 🎯💯"
                 ]
                 
-                corpo_art = f"Allora, la situazione nel dettaglio è questa: {n['descrizione']} 🛠️✨ In parole semplici, significa che gli sviluppatori hanno fatto questa mossa per migliorare l'esperienza di gioco e dare ai fan esattamente quello che aspettavano. L'hype è salito alle stelle e la community sta già reagendo alla grande! 🚀 Mettetevi comodi, preparate i pad e godetevi ogni novità di questa chicca! 💯🎮🔥"
+                # Articolo strutturato per sviscerare specificamente cosa dice la notizia (collaborazioni, skin, contenuti)
+                corpo_art = f"Entriamo subito nei dettagli di quello che sta succedendo: {n['descrizione']} 🛠️✨ In parole molto semplici e dirette, la notizia ci svela esattamente tutti i retroscena, i contenuti e le particolarità di questa novità. Che si tratti di una skin pazzesca, di una collaborazione inaspettata o di un aggiornamento del gameplay, la community ha già iniziato a esaltarsi forte. L'hype è alle stelle e i fan non vedono l'ora di mettere le mani su tutto questo ben di dio! 🚀 Mettetevi comodi, preparate i pad e godetevi ogni singolo dettaglio di questa chicca! 💯🎮🔥"
                 
                 st.markdown(f"""
                 <div class="article-box">
@@ -109,6 +108,6 @@ if st.session_state.notizie_reali:
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata per questa ricerca specifica nelle ultime ore. Prova a scrivere un altro gioco o un termine più generale!")
+        st.warning("Nessuna notizia specifica trovata nelle ultime ore per questa ricerca. Prova a scrivere il nome del gioco insieme a 'skin', 'aggiornamento' o 'collaborazione'!")
     else:
-        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News di Oggi' per trovare le ultime novità reali!")
+        st.info("👈 Scrivi un gioco o un evento nella barra laterale (es. *Fortnite skin* o *Brawl Stars aggiornamento*) e clicca su 'Cerca News Dettagliate'!")
