@@ -3,6 +3,7 @@ import random
 import urllib.request
 import json
 import urllib.parse
+from bs4 import BeautifulSoup
 
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
@@ -66,25 +67,16 @@ def traduci_in_italiano(testo):
 def cerca_news_sicura(termine):
     try:
         results = []
-        # Usiamo un feed di ricerca pubblico e diretto via API web per evitare i blocchi IP di Streamlit
         url_ricerca = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(termine + ' gaming news')}"
         req = urllib.request.Request(url_ricerca, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         
         with urllib.request.urlopen(req) as response:
             html = response.read().decode('utf-8')
-            
-            # Estraiamo i risultati in modo furbo direttamente dall'HTML di DuckDuckGo
-            from bs4 import BeautifulSoup
             soup = BeautifulSoup(html, 'html.parser')
             
             for a in soup.find_all('a', class_='result__snippet', limit=6):
                 body = a.get_text()
-                # Cerchiamo il titolo associato
                 parent = a.find_parent('div', class_='result')
-                titolo_elem = parent.find('a', class_='result__url') if parent else None
-                link_elem = parent.find('a', class_='result__snippet') if parent else None
-                
-                # Ricaviamo link e titolo puliti
                 link_a = parent.find('a', class_='result__title') if parent else None
                 titolo = link_a.get_text().strip() if link_a else "Notizia Gaming"
                 href = link_a['href'] if link_a and 'href' in link_a.attrs else "#"
@@ -102,8 +94,7 @@ def cerca_news_sicura(termine):
                         break
         return results
     except Exception as e:
-        # Piano di riserva ultra-rapido nel caso servisse
-        return [{"titolo": f"Novità ufficiali su {termine}", "descrizione": f"Tutti gli ultimi aggiornamenti, eventi e novità recenti riguardanti {termine nel mondo del gaming}.", "url": "https://www.google.com"}]
+        return [{"titolo": f"Novità ufficiali su {termine}", "descrizione": f"Tutti gli ultimi aggiornamenti, eventi e novità recenti riguardanti {termine} nel mondo del gaming.", "url": "https://www.google.com"}]
 
 if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
@@ -156,3 +147,4 @@ else:
         st.warning("Nessuna notizia trovata.")
     else:
         st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News'!")
+        
