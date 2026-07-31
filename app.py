@@ -44,11 +44,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Cerchiamo le notizie delle ultime tre settimane, tradotte in italiano, pulite dallo spam e pronte per essere trasformate in articoli epici! 🔥")
+st.write("Bella bro! Ricerca avanzata attiva: adesso scansiona update, patch e novità delle ultime tre settimane per qualsiasi gioco! 🔥")
 
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
-    query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin")
+    query_utente = st.text_input("Cosa vuoi cercare?", "Brawl Stars")
     cerca_btn = st.button("🔍 Cerca News (Ultime 3 Settimane)")
 
 def traduci_in_italiano(testo):
@@ -63,12 +63,12 @@ def traduci_in_italiano(testo):
     except:
         return testo
 
-def cerca_news_tre_settimane(termine):
+def cerca_news_avanzata(termine):
     try:
         results = []
         with DDGS() as ddgs:
-            # Filtro impostato sulle ultime 3 settimane / mese ('m') per garantire una copertura ottimale
-            query_mirata = f"{termine} videogioco news"
+            # Cerchiamo combinando il gioco con termini chiave di aggiornamento ed eventi delle ultime 3 settimane ('m')
+            query_mirata = f"{termine} (update OR patch OR news OR evento OR skin)"
             for r in ddgs.text(query_mirata, max_results=8, timelimit='m'):
                 titolo = r.get('title', '')
                 body = r.get('body', '')
@@ -80,7 +80,7 @@ def cerca_news_tre_settimane(termine):
                 
                 is_spam = any(parola in testo_totale for parola in parole_spazzatura)
                 
-                if len(body) > 30 and not is_spam:
+                if len(body) > 20 and not is_spam:
                     titolo_it = traduci_in_italiano(titolo)
                     body_it = traduci_in_italiano(body)
                     results.append({"titolo": titolo_it, "descrizione": body_it, "url": url})
@@ -95,8 +95,8 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Cerco le novità delle ultime tre settimane su '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_news_tre_settimane(query_utente)
+    with st.spinner(f"Cerco gli ultimi aggiornamenti su '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_news_avanzata(query_utente)
 
 if st.session_state.notizie_reali:
     st.subheader(f"📰 News delle ultime 3 settimane per: '{query_utente}'")
@@ -139,6 +139,6 @@ if st.session_state.notizie_reali:
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata per questa ricerca nelle ultime tre settimane. Prova a scrivere un termine leggermente diverso!")
+        st.warning("Nessuna notizia trovata per questa ricerca. Prova a scrivere il nome del gioco insieme a 'aggiornamento'!")
     else:
         st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News (Ultime 3 Settimane)'!")
