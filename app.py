@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 from duckduckgo_search import DDGS
+from deep_translator import GoogleTranslator
 
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
@@ -42,23 +43,36 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Scrivi qualsiasi gioco o argomento: l'app pescherà i dettagli specifici di oggi e ieri dal web (collaborazioni, skin, aggiornamenti) e li trasformerà in articoli epici, semplici e pieni di emoji! 🔥")
+st.write("Bella bro! Cerchiamo ovunque nel mondo le notizie di oggi e ieri, le traduciamo in italiano e le spieghiamo dritte al punto, senza perdite di tempo! 🔥")
 
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
-    query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin")
-    cerca_btn = st.button("🔍 Cerca News Dettagliate")
+    query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin update")
+    cerca_btn = st.button("🔍 Cerca News Globali")
 
-def cerca_notizie_specifiche(termine):
+def traduci_testo(testo):
+    try:
+        if testo and len(testo) > 2:
+            return GoogleTranslator(source='auto', target='it').translate(testo)
+    except:
+        pass
+    return testo
+
+def cerca_news_globali(termine):
     try:
         results = []
+        # Cerchiamo su tutto il web globale ma imponiamo il filtro temporale rigoroso sulle ultime 24 ore ('d')
         with DDGS() as ddgs:
-            # Cerchiamo con termini specifici per catturare dettagli, skin e collaborazioni
-            for r in ddgs.text(f"{termine} dettagli skin collaborazione aggiornamento", max_results=4, timelimit='d'):
-                titolo = r.get('title', 'Notizia gaming')
-                body = r.get('body', 'Nessun dettaglio specifico disponibile.')
+            for r in ddgs.text(f"{termine} gaming news", max_results=5, timelimit='d'):
+                titolo_raw = r.get('title', '')
+                body_raw = r.get('body', '')
                 url = r.get('href', '#')
-                results.append({"titolo": titolo, "descrizione": body, "url": url})
+                
+                if len(body_raw) > 30:
+                    # Traduciamo titolo e corpo direttamente in italiano
+                    titolo_it = traduci_testo(titolo_raw)
+                    body_it = traduci_testo(body_raw)
+                    results.append({"titolo": titolo_it, "descrizione": body_it, "url": url})
         return results
     except Exception as e:
         return []
@@ -67,34 +81,38 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Sto analizzando a fondo il web per trovare tutti i dettagli su '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_notizie_specifiche(query_utente)
+    with st.spinner(f"Scandaglio il web mondiale per trovare le ultime novità su '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_news_globali(query_utente)
 
 if st.session_state.notizie_reali:
-    st.subheader(f"📰 Notizie specifiche e dettagliate per: '{query_utente}'")
+    st.subheader(f"📰 News freschissime per: '{query_utente}'")
     
     for i, n in enumerate(st.session_state.notizie_reali):
         with st.container():
             st.markdown(f"""
             <div class="news-box">
                 <h3>🕹️ {n['titolo']}</h3>
-                <p><b>Contenuto specifico:</b> {n['descrizione']}</p>
-                <a href="{n['url']}" target="_blank" style="color: #00ff66; font-weight: bold;">🔗 Fonte originale completa</a>
+                <p><b>Contenuto:</b> {n['descrizione']}</p>
+                <a href="{n['url']}" target="_blank" style="color: #00ff66; font-weight: bold;">🔗 Fonte originale</a>
             </div>
             """, unsafe_allow_html=True)
             
-            if st.button(f"✨ Genera Articolo Dettagliato #{i+1}", key=f"gen_{i}"):
+            dettaglio_extra = st.text_input(f"Aggiungi dettagli extra (es. nome skin o collab) per la notizia #{i+1}:", key=f"extra_{i}")
+            
+            if st.button(f"✨ Genera Articolo Diretto #{i+1}", key=f"gen_{i}"):
                 intro_list = [
-                    "Yo bro, beccati questa bomba freschissima con tutti i dettagli precisi usciti in queste ore! 💣🔥",
-                    "Madonna fra! Guarda che roba assurda è appena stata svelata nel mondo del gaming, entriamo subito nel vivo! 🎮💥",
-                    "Bella raga, ci sono novità pazzesche e super specifiche: ecco esattamente cosa sta succedendo! 🕹️⚡",
-                    "Gamer di tutto il mondo, occhi aperti: ecco il report completo e dettagliato della notizia del giorno! 🏆👾",
-                    "Attiska fra! Questa è una chicca imperdibile, beccati tutti i retroscena e le novità svelate! 🚀🔥",
-                    "Raga, tenetevi forte perché abbiamo tutti i dettagli succosi di questa news appena sfornata! 🎯💯"
+                    "Yo bro, beccati questa news freschissima appena tradotta e sganciata dal web! 💣🔥",
+                    "Attiska fra! Guarda cosa è appena uscito nel mondo, andiamo dritti al sodo! 🎮💥",
+                    "Bella raga, beccatevi questo aggiornamento caldissimo tradotto al volo: ecco i fatti! 🕹️⚡",
+                    "Gamer, zero giri di parole: ecco la novità del giorno spiegata pulita e semplice! 🏆👾"
                 ]
                 
-                # Articolo strutturato per sviscerare specificamente cosa dice la notizia (collaborazioni, skin, contenuti)
-                corpo_art = f"Entriamo subito nei dettagli di quello che sta succedendo: {n['descrizione']} 🛠️✨ In parole molto semplici e dirette, la notizia ci svela esattamente tutti i retroscena, i contenuti e le particolarità di questa novità. Che si tratti di una skin pazzesca, di una collaborazione inaspettata o di un aggiornamento del gameplay, la community ha già iniziato a esaltarsi forte. L'hype è alle stelle e i fan non vedono l'ora di mettere le mani su tutto questo ben di dio! 🚀 Mettetevi comodi, preparate i pad e godetevi ogni singolo dettaglio di questa chicca! 💯🎮🔥"
+                # Montiamo il testo basandoci ESATTAMENTE sui dati reali della notizia senza riempitivi inutili
+                info_fatti = n['descrizione']
+                if dettaglio_extra:
+                    info_fatti = f"{info_fatti} Nello specifico: {dettaglio_extra}"
+                
+                corpo_art = f"Ecco esattamente cosa dice la notizia, senza fronzoli: {info_fatti} 🛠️✨ In parole povere, questo è tutto quello che sta succedendo in questo momento sul gioco. Preparate i pad e godetevi la novità! 💯🎮🔥"
                 
                 st.markdown(f"""
                 <div class="article-box">
@@ -102,12 +120,12 @@ if st.session_state.notizie_reali:
                     <p style="font-size: 18px; line-height: 1.6; color: #00ff66;"><b>{random.choice(intro_list)}</b></p>
                     <p style="font-size: 16px; line-height: 1.6;">{corpo_art}</p>
                     <hr style="border-color: #9400D3;">
-                    <p style="font-size: 14px; color: #b19cd9;">📌 <b>Notizia originale:</b> {n['titolo']}</p>
-                    <p style="font-size: 15px;">🎮 <i>Stay tuned, carichi per la prossima live e GG a tutti!</i> 🚀✨</p>
+                    <p style="font-size: 14px; color: #b19cd9;">📌 <b>Titolo originale:</b> {n['titolo']}</p>
+                    <p style="font-size: 15px;">🎮 <i>Stay tuned e GG a tutti!</i> 🚀✨</p>
                 </div>
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia specifica trovata nelle ultime ore per questa ricerca. Prova a scrivere il nome del gioco insieme a 'skin', 'aggiornamento' o 'collaborazione'!")
+        st.warning("Nessuna notizia trovata nelle ultime ore per questa ricerca. Prova a cambiare parole chiave o a scrivere il nome del gioco in inglese!")
     else:
-        st.info("👈 Scrivi un gioco o un evento nella barra laterale (es. *Fortnite skin* o *Brawl Stars aggiornamento*) e clicca su 'Cerca News Dettagliate'!")
+        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News Globali'!")
