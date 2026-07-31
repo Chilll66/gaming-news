@@ -1,4 +1,7 @@
 import streamlit as st
+import urllib.request
+import json
+import urllib.parse
 
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
@@ -31,21 +34,48 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Qui trovi le tue notizie fresche fresche in stile chill & gaming.")
+st.write("Bella bro! Cerca le ultime notizie dal web, seleziona quella che ti interessa e genera l'articolo in stile chill & gaming.")
 
+# Barra laterale per i comandi di ricerca
 with st.sidebar:
-    st.header("🎮 Controlli")
-    if st.button("🔍 Cerca Nuove Notizie"):
-        st.success("Ricerca avviata nel web!")
+    st.header("🎮 Controlli di Ricerca")
+    query = st.text_input("Cosa vuoi cercare?", "videogiochi ultime uscite")
+    cerca_btn = st.button("🔍 Cerca sul Web")
 
-st.subheader("📰 Notizie pronte da elaborare")
-st.markdown("""
-<div class="news-box">
-    <h3>Uscita epica in arrivo per il nuovo RPG</h3>
-    <p><b>Fonte:</b> Web Gaming</p>
-    <p><i>Anteprima:</i> Annunciata la data ufficiale...</p>
-</div>
-""", unsafe_allow_html=True)
+# Funzione per cercare notizie usando le API pubbliche di DuckDuckGo
+def cerca_notizie(termine):
+    try:
+        url = f"https://api.duckduckgo.com/?q={urllib.parse.quote(termine)}&format=json"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+            risultati = []
+            for item in data.get('RelatedTopics', []):
+                if 'Text' in item and 'FirstURL' in item:
+                    risultati.append({"titolo": item['Text'], "url": item['FirstURL']})
+            return risultati
+    except Exception as e:
+        return []
 
-if st.button("✨ Genera Testo Notizia (Stile Chill)"):
-    st.info("Yo bro, beccati questa: sembra proprio che gli sviluppatori abbiano spaccato stavolta, preparate i pad!")
+# Gestione della ricerca
+if "notizie_trovate" not in st.session_state:
+    st.session_state.notizie_trovate = []
+
+if cerca_btn:
+    with st.spinner("Sto scandagliando il web per te..."):
+        st.session_state.notizie_trovate = cerca_notizie(query)
+
+# Mostra i risultati se ci sono
+if st.session_state.notizie_trovate:
+    st.subheader("📰 Notizie trovate nel web (Seleziona la tua preferita)")
+    
+    scelte = [n["titolo"] for n in st.session_state.notizie_trovate]
+    notizia_scelta = st.selectbox("Scegli una notizia dalla lista:", scelte)
+    
+    if st.button("✨ Genera Testo Notizia (Stile Chill)"):
+        st.markdown("---")
+        st.subheader("📝 Articolo Generato:")
+        st.success(f"**Yo bro, beccati questa:**\n\Abbiamo analizzato la notizia selezionata: *\"{notizia_scelta}\"*. Sembra proprio che ci siano grosse novità in arrivo nel mondo del gaming. Preparate i pad perché qui la situazione si fa interessante!" )
+else:
+    if cerca_btn:
+        st.warning("Nessun risultato immediato trovato, prova a cambiare termine di ricerca nella barra laterale!") gli sviluppatori abbiano spaccato stavolta, preparate i pad!")
