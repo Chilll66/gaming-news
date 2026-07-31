@@ -1,6 +1,8 @@
 import streamlit as st
 import random
 from duckduckgo_search import DDGS
+import urllib.request
+import json
 
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
@@ -42,25 +44,50 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Cerchiamo le notizie di oggi e ieri in italiano, dritte al punto e senza perdite di tempo! 🔥")
+st.write("Bella bro! Filtro anti-spam attivo: niente pubblicità strane, solo notizie di gaming tradotte in italiano e dritte al punto! 🔥")
 
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
-    query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin update")
-    cerca_btn = st.button("🔍 Cerca News di Oggi")
+    query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin aggiornamento")
+    cerca_btn = st.button("🔍 Cerca News Vere")
 
-def cerca_news_italiane(termine):
+def traduci_in_italiano(testo):
+    try:
+        if not testo:
+            return ""
+        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=it&dt=t&q={urllib.parse.quote(testo)}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            res = json.loads(response.read().decode('utf-8'))
+            return "".join([item[0] for item in res[0]])
+    except:
+        return testo
+
+def cerca_news_pulite(termine):
     try:
         results = []
-        # Cerchiamo direttamente impostando la regione in italiano per avere risultati puliti e nativi
         with DDGS() as ddgs:
-            for r in ddgs.text(f"{termine} gaming news", max_results=5, region='it-it', timelimit='d'):
+            # Aggiungiamo parole chiave per forzare risultati di videogiochi ed evitare spam commerciale
+            query_mirata = f"{termine} videogioco news"
+            for r in ddgs.text(query_mirata, max_results=8, timelimit='d'):
                 titolo = r.get('title', '')
                 body = r.get('body', '')
                 url = r.get('href', '#')
                 
-                if len(body) > 30:
-                    results.append({"titolo": titolo, "descrizione": body, "url": url})
+                # Filtro severo anti-spam: scartiamo idromassaggi, arredamento, finanza e siti non inerenti
+                parole_spazzatura = ['spa', 'hot tub', 'hotel', 'mattress', 'finance', 'real estate', 'idromassaggio', 'materasso']
+                testo_totale = (titolo + " " + body).lower()
+                
+                is_spam = any(parola in testo_totale for parola in parole_spazzatura)
+                
+                if len(body) > 40 and not is_spam:
+                    # Traduciamo tutto in italiano all'istante
+                    titolo_it = traduci_in_italiano(titolo)
+                    body_it = traduci_in_italiano(body)
+                    results.append({"titolo": titolo_it, "descrizione": body_it, "url": url})
+                    
+                    if len(results) >= 3: # Teniamo solo i 3 migliori risultati puliti
+                        break
         return results
     except Exception as e:
         return []
@@ -69,11 +96,11 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Scandaglio il web per trovare le ultime novità su '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_news_italiane(query_utente)
+    with st.spinner(f"Filtro il web e traduco le news su '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_news_pulite(query_utente)
 
 if st.session_state.notizie_reali:
-    st.subheader(f"📰 News freschissime per: '{query_utente}'")
+    st.subheader(f"📰 News di gaming pulite e in italiano per: '{query_utente}'")
     
     for i, n in enumerate(st.session_state.notizie_reali):
         with st.container():
@@ -89,9 +116,9 @@ if st.session_state.notizie_reali:
             
             if st.button(f"✨ Genera Articolo Diretto #{i+1}", key=f"gen_{i}"):
                 intro_list = [
-                    "Yo bro, beccati questa news freschissima uscita nelle ultime ore! 💣🔥",
-                    "Attiska fra! Guarda cosa è appena uscito nel mondo, andiamo dritti al sodo! 🎮💥",
-                    "Bella raga, beccatevi questo aggiornamento caldissimo: ecco i fatti! 🕹️⚡",
+                    "Yo bro, beccati questa news freschissima tradotta al volo e sganciata dal web! 💣🔥",
+                    "Attiska fra! Guarda cosa è appena uscito nel mondo del gaming, andiamo dritti al sodo! 🎮💥",
+                    "Bella raga, beccatevi questo aggiornamento caldissimo: ecco i fatti nudi e crudi! 🕹️⚡",
                     "Gamer, zero giri di parole: ecco la novità del giorno spiegata pulita e semplice! 🏆👾"
                 ]
                 
@@ -113,6 +140,6 @@ if st.session_state.notizie_reali:
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata nelle ultime ore per questa ricerca. Prova a cambiare parole chiave o a scrivere il nome del gioco in modo più generale!")
+        st.warning("Nessuna notizia pulita trovata per questa ricerca nelle ultime ore. Prova a scrivere il nome del gioco insieme a parole come 'aggiornamento' o 'skin'!")
     else:
-        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News di Oggi'!")
+        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News Vere'!")
