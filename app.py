@@ -68,27 +68,37 @@ def traduci_in_italiano(testo):
     except:
         return testo
 
-# Funzione per estrarre il vero contenuto dall'interno del sito web della notizia
+# Funzione potenziata per estrarre il vero contenuto dall'interno del sito web
 def estrai_contenuto_articolo(url):
     try:
         if not url or url.startswith("#"):
             return ""
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        with urllib.request.urlopen(req, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=6) as response:
             html = response.read().decode('utf-8', errors='ignore')
             soup = BeautifulSoup(html, 'html.parser')
             
-            # Rimuoviamo elementi inutili come script, menu e footer
-            for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
-                script.decompose()
+            # Rimuoviamo elementi inutili come script, menu, footer e pubblicità
+            for elem in soup(["script", "style", "nav", "footer", "header", "aside", "form", "iframe"]):
+                elem.decompose()
                 
-            # Cerchiamo i paragrafi di testo principali
-            paragrafi = soup.find_all('p')
-            testo_completo = " ".join([p.get_text().strip() for p in paragrafi if len(p.get_text().strip()) > 30])
+            # Cerchiamo prima nei blocchi principali dell'articolo se esistono
+            contenitore_principale = soup.find('article') or soup.find('main') or soup.find('div', class_=['content', 'post-content', 'entry-content', 'article-body'])
             
-            if len(testo_completo) > 200:
-                # Prendiamo i primi 600-800 caratteri di ciccia vera
-                return traduci_in_italiano(testo_completo[:750] + "...")
+            target_soup = contenitore_principale if contenitore_principale else soup
+            paragrafi = target_soup.find_all('p')
+            
+            testi_utili = []
+            for p in paragrafi:
+                txt = p.get_text().strip()
+                # Filtriamo i paragrafi troppo corti o che sembrano menu/cookie
+                if len(txt) > 40 and not any(parola in txt.lower() for parola in ['cookie', 'privacy', 'tutti i diritti', 'rights reserved', 'iscriviti', 'newsletter']):
+                    testi_utili.append(txt)
+                    
+            testo_completo = " ".join(testi_utili)
+            
+            if len(testo_completo) > 150:
+                return traduci_in_italiano(testo_completo[:1200])
             return ""
     except:
         return ""
@@ -98,7 +108,7 @@ def cerca_news_profonda(termine):
     try:
         results = []
         url_ricerca = "https://lite.duckduckgo.com/lite/"
-        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news update"}).encode('utf-8')
+        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news update patch"}).encode('utf-8')
         
         req = urllib.request.Request(url_ricerca, data=dati_post, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         
@@ -119,11 +129,11 @@ def cerca_news_profonda(termine):
                 is_spam = any(p in testo_totale for p in parole_spazzatura)
                 
                 if len(snippet_base) > 10 and not is_spam:
-                    # Estraiamo il contenuto reale direttamente dalla pagina linkata
+                    # Estraiamo il contenuto reale approfondito dal sito
                     contenuto_reale = estrai_contenuto_articolo(href)
                     
-                    # Se l'estrazione fallisce o è vuota, usiamo il testo tradotto della snippet arricchito
-                    descrizione_finale = contenuto_reale if contenuto_reale else traduci_in_italiano(snippet_base)
+                    # Se il contenuto estratto è valido e corposo usiamo quello, altrimenti ripieghiamo sulla snippet tradotta
+                    descrizione_finale = contenuto_reale if len(contenuto_reale) > 100 else traduci_in_italiano(snippet_base)
                     
                     titolo_it = traduci_in_italiano(titolo)
                     results.append({"titolo": titolo_it, "descrizione": descrizione_finale, "url": href})
@@ -159,10 +169,9 @@ if st.session_state.notizie_reali:
             dettaglio_extra = st.text_input(f"Aggiungi dettagli extra (es. nome skin o collab) per la notizia #{i+1}:", key=f"extra_{i}")
             
             if st.button(f"✨ Genera Articolo Unico #{i+1}", key=f"gen_{i}"):
-                # Liste enormi e variate per intro e outro completamente uniche ogni volta
                 intro_list = [
                     f"Yo bro, occhio a questa bomba appena sganciata sul mondo di {query_utente}! 💣🔥",
-                    f"Attiska fra! C'è un leak pazzesco che sta sconvolgendo la community in queste ore. 🎮💥",
+                    f"Madonna fra! C'è un leak pazzesco che sta sconvolgendo la community in queste ore. 🎮💥",
                     f"Bella raga, mettetevi comodi perché l'ultimo aggiornamento spacca di brutto. 🕹️⚡",
                     f"Gamer, zero giri di parole: ecco cosa bolle in pentola per il nostro gioco preferito! 🏆👾",
                     f"Occhi aperti player! Le ultime novità arrivate dal web cambiano completamente le carte in tavola. 🚀🎯",
@@ -171,7 +180,7 @@ if st.session_state.notizie_reali:
                 
                 outro_list = [
                     "Voi che ne pensate? Scrivetelo nei commenti e preparate i controller! 🎮💬",
-                    "Preparate leranked e caricate i pad, ci sarà da divertirsi sul serio! 🚀💯",
+                    "Preparate le ranked e caricate i pad, ci sarà da divertirsi sul serio! 🚀💯",
                     "Fateci sapere se questa novità vi gasa o se speravate in qualcosa di diverso. GG a tutti! 🏆🔥",
                     "L'hype è alle stelle: non ci resta che aspettare il rilascio ufficiale. Stay tuned! 👾✨",
                     "Condividete l'articolo con la vostra squad e preparatevi alla battaglia! 🛠️⚡",
