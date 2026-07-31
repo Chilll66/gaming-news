@@ -1,7 +1,5 @@
 import streamlit as st
-import urllib.request
-import json
-import urllib.parse
+from duckduckgo_search import DDGS
 
 st.set_page_config(page_title="Gaming News Generator", page_icon="🎮", layout="wide")
 
@@ -42,40 +40,43 @@ with st.sidebar:
     query = st.text_input("Cosa vuoi cercare?", "videogiochi ultime uscite")
     cerca_btn = st.button("🔍 Cerca sul Web")
 
-# Funzione per cercare notizie usando le API pubbliche di DuckDuckGo
-def cerca_notizie(termine):
+# Funzione di ricerca robusta con DuckDuckGo
+def cerca_notizie_web(termine):
     try:
-        url = f"https://api.duckduckgo.com/?q={urllib.parse.quote(termine)}&format=json"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req) as response:
-            data = json.loads(response.read().decode())
-            risultati = []
-            for item in data.get('RelatedTopics', []):
-                if 'Text' in item and 'FirstURL' in item:
-                    risultati.append({"titolo": item['Text'], "url": item['FirstURL']})
-            return risultati
+        results = []
+        with DDGS() as ddgs:
+            for r in ddgs.text(termine, max_results=5):
+                results.append({"titolo": r.get('title'), "url": r.get('href'), "body": r.get('body')})
+        return results
     except Exception as e:
         return []
 
-# Gestione della ricerca
 if "notizie_trovate" not in st.session_state:
     st.session_state.notizie_trovate = []
 
 if cerca_btn:
     with st.spinner("Sto scandagliando il web per te..."):
-        st.session_state.notizie_trovate = cerca_notizie(query)
+        st.session_state.notizie_trovate = cerca_notizie_web(query)
 
-# Mostra i risultati se ci sono
+# Mostra i risultati
 if st.session_state.notizie_trovate:
     st.subheader("📰 Notizie trovate nel web (Seleziona la tua preferita)")
     
-    scelte = [n["titolo"] for n in st.session_state.notizie_trovate]
-    notizia_scelta = st.selectbox("Scegli una notizia dalla lista:", scelte)
+    scelte = {n["titolo"]: n for n in st.session_state.notizie_trovate}
+    titolo_scelto = st.selectbox("Scegli una notizia dalla lista:", list(scelte.keys()))
+    notizia_scelta = scelte[titolo_scelto]
+    
+    st.markdown(f"""
+    <div class="news-box">
+        <p><b>Anteprima:</b> {notizia_scelta['body']}</p>
+        <p><a href="{notizia_scelta['url']}" target="_blank">🔗 Leggi la fonte originale</a></p>
+    </div>
+    """, unsafe_allow_html=True)
     
     if st.button("✨ Genera Testo Notizia (Stile Chill)"):
         st.markdown("---")
         st.subheader("📝 Articolo Generato:")
-        st.success(f"**Yo bro, beccati questa:**\n\nAbbiamo analizzato la notizia selezionata: *\"{notizia_scelta}\"*. Sembra proprio che gli sviluppatori abbiano spaccato stavolta, preparate i pad!")
+        st.success(f"**Yo bro, beccati questa:**\n\nAbbiamo analizzato la notizia *\"{titolo_scelto}\"*. Sembra proprio che gli sviluppatori abbiano spaccato stavolta, preparate i pad perché la scimmia è salita altissima!")
 else:
     if cerca_btn:
-        st.warning("Nessun risultato immediato trovato, prova a cambiare termine di ricerca nella barra laterale!")
+        st.warning("Nessun risultato trovato, prova a cambiare termine di ricerca nella barra laterale!")
