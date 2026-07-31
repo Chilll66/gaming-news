@@ -68,8 +68,8 @@ def traduci_in_italiano(testo):
     except:
         return testo
 
-# Funzione potenziata per estrarre il vero contenuto dall'interno del sito web
-def estrai_contenuto_articolo(url):
+# Funzione potenziata per estrarre e riassumere in modo pulito il contenuto senza tagli netti o puntini
+def estrai_e_rielabora_articolo(url):
     try:
         if not url or url.startswith("#"):
             return ""
@@ -82,23 +82,24 @@ def estrai_contenuto_articolo(url):
             for elem in soup(["script", "style", "nav", "footer", "header", "aside", "form", "iframe"]):
                 elem.decompose()
                 
-            # Cerchiamo prima nei blocchi principali dell'articolo se esistono
             contenitore_principale = soup.find('article') or soup.find('main') or soup.find('div', class_=['content', 'post-content', 'entry-content', 'article-body'])
-            
             target_soup = contenitore_principale if contenitore_principale else soup
             paragrafi = target_soup.find_all('p')
             
             testi_utili = []
             for p in paragrafi:
                 txt = p.get_text().strip()
-                # Filtriamo i paragrafi troppo corti o che sembrano menu/cookie
-                if len(txt) > 40 and not any(parola in txt.lower() for parola in ['cookie', 'privacy', 'tutti i diritti', 'rights reserved', 'iscriviti', 'newsletter']):
+                if len(txt) > 50 and not any(parola in txt.lower() for parola in ['cookie', 'privacy', 'tutti i diritti', 'rights reserved', 'iscriviti', 'newsletter']):
                     testi_utili.append(txt)
                     
-            testo_completo = " ".join(testi_utili)
-            
-            if len(testo_completo) > 150:
-                return traduci_in_italiano(testo_completo[:1200])
+            if testi_utili:
+                # Uniamo i paragrafi in modo logico creando un flusso discorsivo fluido e senza troncamenti
+                testo_grezzo = " ".join(testi_utili[:4])
+                tradotto = traduci_in_italiano(testo_grezzo)
+                
+                # Aggiungiamo un tocco di curiosità e ricchezza descrittiva fluida
+                sintesi_fluida = f"Analizzando a fondo la situazione, emerge che {tradotto} Tra le curiosità meno conosciute legate a questo argomento, la community ha spesso evidenziato dettagli nascosti e retroscena di sviluppo che arricchiscono l'esperienza di gioco in modo inaspettato."
+                return sintesi_fluida
             return ""
     except:
         return ""
@@ -108,7 +109,7 @@ def cerca_news_profonda(termine):
     try:
         results = []
         url_ricerca = "https://lite.duckduckgo.com/lite/"
-        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news update patch"}).encode('utf-8')
+        dati_post = urllib.parse.urlencode({'q': f"{termine} gaming news update patch easter egg"}).encode('utf-8')
         
         req = urllib.request.Request(url_ricerca, data=dati_post, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
         
@@ -129,11 +130,9 @@ def cerca_news_profonda(termine):
                 is_spam = any(p in testo_totale for p in parole_spazzatura)
                 
                 if len(snippet_base) > 10 and not is_spam:
-                    # Estraiamo il contenuto reale approfondito dal sito
-                    contenuto_reale = estrai_contenuto_articolo(href)
+                    contenuto_rielaborato = estrai_e_rielabora_articolo(href)
                     
-                    # Se il contenuto estratto è valido e corposo usiamo quello, altrimenti ripieghiamo sulla snippet tradotta
-                    descrizione_finale = contenuto_reale if len(contenuto_reale) > 100 else traduci_in_italiano(snippet_base)
+                    descrizione_finale = contenuto_rielaborato if len(contenuto_rielaborato) > 100 else f"Approfondendo le novità su {termine}, emergono dettagli succosi e curiosità insolite che vale la pena scoprire. {traduci_in_italiano(snippet_base)}"
                     
                     titolo_it = traduci_in_italiano(titolo)
                     results.append({"titolo": titolo_it, "descrizione": descrizione_finale, "url": href})
@@ -170,28 +169,28 @@ if st.session_state.notizie_reali:
             
             if st.button(f"✨ Genera Articolo Unico #{i+1}", key=f"gen_{i}"):
                 intro_list = [
-                    f"Yo bro, occhio a questa bomba appena sganciata sul mondo di {query_utente}! 💣🔥",
-                    f"Madonna fra! C'è un leak pazzesco che sta sconvolgendo la community in queste ore. 🎮💥",
-                    f"Bella raga, mettetevi comodi perché l'ultimo aggiornamento spacca di brutto. 🕹️⚡",
-                    f"Gamer, zero giri di parole: ecco cosa bolle in pentola per il nostro gioco preferito! 🏆👾",
-                    f"Occhi aperti player! Le ultime novità arrivate dal web cambiano completamente le carte in tavola. 🚀🎯",
-                    f"Let's go raga! È spuntata fuori una notizia freschissima che stavamo aspettando tutti. 🌟🔥"
+                    f"Yo bro! 🎮🔥 Occhio a questa bomba appena sganciata sul mondo di {query_utente}! 💣✨",
+                    f"Attiska fra! 🚀👾 C'è un leak pazzesco e pieno di curiosità nascoste che sta sconvolgendo la community. 🔮💥",
+                    f"Bella raga! 🕹️⚡ Mettetevi comodi perché l'ultimo aggiornamento nasconde dettagli assurdi. 🌟🔥",
+                    f"Gamer! 🏆👾 Zero giri di parole: ecco cosa bolle in pentola e le chicche segrete del giorno! 🎮🎯",
+                    f"Occhi aperti player! 🎯🔥 Le ultime novità arrivate dal web svelano retroscena pazzeschi. 🚀💫",
+                    f"Let's go raga! 🌟🔥 È spuntata fuori una notizia freschissima ricca di curiosità imperdibili. 🕹️🎮"
                 ]
                 
                 outro_list = [
-                    "Voi che ne pensate? Scrivetelo nei commenti e preparate i controller! 🎮💬",
-                    "Preparate le ranked e caricate i pad, ci sarà da divertirsi sul serio! 🚀💯",
-                    "Fateci sapere se questa novità vi gasa o se speravate in qualcosa di diverso. GG a tutti! 🏆🔥",
-                    "L'hype è alle stelle: non ci resta che aspettare il rilascio ufficiale. Stay tuned! 👾✨",
-                    "Condividete l'articolo con la vostra squad e preparatevi alla battaglia! 🛠️⚡",
-                    "Questa mossa spacca di brutto: ci becciamo direttamente in game per testarla! 🕹️🚀"
+                    "Voi che ne pensate di queste chicche? 🎮💬 Scrivetelo nei commenti e preparate i controller! 🚀🔥",
+                    "Preparate le ranked e caricate i pad! 🕹️💯 Ci sarà da divertirsi scoprendo ogni segreto nascosto. 🏆✨",
+                    "Fateci sapere se questa novità vi gasa o se sapevate già tutto. 👾🔥 GG a tutti raga! 🚀🎮",
+                    "L'hype è alle stelle! 🌟💫 Non ci resta che testare tutto in game. Stay tuned e buon gaming! 🕹️🎯",
+                    "Condividete l'articolo con la vostra squad! 🛠️⚡ Preparatevi alla battaglia e a caccia di easter egg! 🎮🔥",
+                    "Questa mossa spacca di brutto! 🚀👾 Ci becciamo direttamente in game per spolparla fino all'ultimo! 🕹️💯"
                 ]
                 
                 info_fatti = n['descrizione']
                 if dettaglio_extra:
-                    info_fatti = f"{info_fatti} Dettagli imperdibili dal campo: {dettaglio_extra}"
+                    info_fatti = f"{info_fatti} 💎 Curiosità extra dal campo: {dettaglio_extra}"
                 
-                corpo_art = f"Entrando subito nei dettagli tecnici e nelle informazioni raccolte, ecco cosa sta succedendo: {info_fatti} Gli sviluppatori non si sono risparmiati questa volta, introducendo modifiche che faranno felici sia i veterani che i nuovi player."
+                corpo_art = f"Entrando subito nei dettagli tecnici e nelle curiosità più stravaganti raccolte in rete, ecco cosa sta succedendo: {info_fatti} 🛠️✨ Gli sviluppatori non si sono risparmiati, inserendo chicche e particolari che faranno impazzire sia i veterani più attenti che i nuovi player in cerca di emozioni forti. 🎮🔥"
                 
                 st.markdown(f"""
                 <div class="article-box">
@@ -208,3 +207,4 @@ else:
         st.warning("Nessuna notizia trovata. Prova a scrivere il nome del gioco.")
     else:
         st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News'!")
+    
