@@ -44,12 +44,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("⚡ GAMING NEWS GENERATOR ⚡")
-st.write("Bella bro! Cerchiamo le notizie dell'ultima settimana, tradotte in italiano, pulite dallo spam e pronte per essere trasformate in articoli epici! 🔥")
+st.write("Bella bro! Cerchiamo le notizie delle ultime tre settimane, tradotte in italiano, pulite dallo spam e pronte per essere trasformate in articoli epici! 🔥")
 
 with st.sidebar:
     st.header("🎮 Controlli di Ricerca")
     query_utente = st.text_input("Cosa vuoi cercare?", "Fortnite skin")
-    cerca_btn = st.button("🔍 Cerca News dell'Ultima Settimana")
+    cerca_btn = st.button("🔍 Cerca News (Ultime 3 Settimane)")
 
 def traduci_in_italiano(testo):
     try:
@@ -63,13 +63,13 @@ def traduci_in_italiano(testo):
     except:
         return testo
 
-def cerca_news_settimana(termine):
+def cerca_news_tre_settimane(termine):
     try:
         results = []
         with DDGS() as ddgs:
-            # Filtro impostato esattamente sull'ultima settimana ('w') per avere news fresche ma senza buchi vuoti
+            # Filtro impostato sulle ultime 3 settimane / mese ('m') per garantire una copertura ottimale
             query_mirata = f"{termine} videogioco news"
-            for r in ddgs.text(query_mirata, max_results=8, timelimit='w'):
+            for r in ddgs.text(query_mirata, max_results=8, timelimit='m'):
                 titolo = r.get('title', '')
                 body = r.get('body', '')
                 url = r.get('href', '#')
@@ -95,11 +95,11 @@ if "notizie_reali" not in st.session_state:
     st.session_state.notizie_reali = []
 
 if cerca_btn:
-    with st.spinner(f"Cerco le novità dell'ultima settimana su '{query_utente}'... 🚀"):
-        st.session_state.notizie_reali = cerca_news_settimana(query_utente)
+    with st.spinner(f"Cerco le novità delle ultime tre settimane su '{query_utente}'... 🚀"):
+        st.session_state.notizie_reali = cerca_news_tre_settimane(query_utente)
 
 if st.session_state.notizie_reali:
-    st.subheader(f"📰 News dell'ultima settimana per: '{query_utente}'")
+    st.subheader(f"📰 News delle ultime 3 settimane per: '{query_utente}'")
     
     for i, n in enumerate(st.session_state.notizie_reali):
         with st.container():
@@ -115,10 +115,10 @@ if st.session_state.notizie_reali:
             
             if st.button(f"✨ Genera Articolo Diretto #{i+1}", key=f"gen_{i}"):
                 intro_list = [
-                    "Yo bro, beccati questa news freschissima uscita in questi ultimi giorni! 💣🔥",
+                    "Yo bro, beccati questa news freschissima uscita in questo ultimo periodo! 💣🔥",
                     "Attiska fra! Guarda cosa è appena uscito nel mondo del gaming, andiamo dritti al sodo! 🎮💥",
-                    "Bella raga, beccatevi questo aggiornamento caldissimo della settimana: ecco i fatti! 🕹️⚡",
-                    "Gamer, zero giri di parole: ecco la novità della settimana spiegata pulita e semplice! 🏆👾"
+                    "Bella raga, beccatevi questo aggiornamento caldissimo: ecco i fatti! 🕹️⚡",
+                    "Gamer, zero giri di parole: ecco la novità del mese spiegata pulita e semplice! 🏆👾"
                 ]
                 
                 info_fatti = n['descrizione']
@@ -139,6 +139,6 @@ if st.session_state.notizie_reali:
                 """, unsafe_allow_html=True)
 else:
     if cerca_btn:
-        st.warning("Nessuna notizia trovata per questa ricerca nell'ultima settimana. Prova a scrivere un termine leggermente diverso!")
+        st.warning("Nessuna notizia trovata per questa ricerca nelle ultime tre settimane. Prova a scrivere un termine leggermente diverso!")
     else:
-        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News dell'Ultima Settimana'!")
+        st.info("👈 Scrivi un gioco nella barra laterale e clicca su 'Cerca News (Ultime 3 Settimane)'!")
