@@ -72,7 +72,8 @@ def traduci_in_italiano(testo):
             "buff": "###BUFF###",
             "nerf": "###NERF###",
             "ranked": "###RANKED###",
-            "esports": "###ESPORTS###"
+            "esports": "###ESPORTS###",
+            "###AGGIORNAMENTO###": "aggiornamento"
         }
         
         testo_protetto = testo
@@ -96,7 +97,8 @@ def traduci_in_italiano(testo):
                 "###BUFF###": "buff",
                 "###NERF###": "nerf",
                 "###RANKED###": "ranked",
-                "###ESPORTS###": "esports"
+                "###ESPORTS###": "esports",
+                "###AGGIORNAMENTO###": "aggiornamento"
             }
             for k, v in ripristini.items():
                 traduzione = traduzione.replace(k, v).replace(k.lower(), v)
@@ -128,13 +130,12 @@ def estrai_contenuti_brevi(url):
             
             for el in elementi:
                 txt = el.get_text().strip()
-                # Prendiamo frasi di media lunghezza (evitando papiri o righe vuote)
                 if 50 < len(txt) < 180 and not any(p in txt.lower() for p in parole_da_scartare):
                     tradotto = traduci_in_italiano(txt)
                     if tradotto and tradotto not in punti_brevi:
                         punti_brevi.append(tradotto)
                         
-            return punti_brevi[:3] # Solo i 3 punti più importanti per mantenere l'articolo corto!
+            return punti_brevi[:3]
     except Exception as e:
         return []
 
@@ -212,7 +213,7 @@ if st.session_state.notizie_reali:
             <div class="news-box">
                 <h3>🕹️ {n['titolo']}</h3>
                 <p><b>Anteprima veloce:</b></p>
-                <ul style="line-height: 1.5; color: #00ff66;">{testo_anteprimina if 'testo_anteprimina' in locals() else testo_anteprima}</ul>
+                <ul style="line-height: 1.5; color: #00ff66;">{testo_anteprima}</ul>
                 <a href="{n['url']}" target="_blank" style="color: #9400D3; font-weight: bold;">🔗 Fonte originale</a>
             </div>
             """, unsafe_allow_html=True)
@@ -232,7 +233,6 @@ if st.session_state.notizie_reali:
                     "Mettetevi all'opera e testate subito le novità! 👾🔥 GG a tutti! 🚀🎮"
                 ]
                 
-                # Montiamo i punti corti con tantissime emoji colorate in mezzo
                 emoji_elenco = ["🎯", "🔥", "⚡", "💎", "🚀", "👾", "🌟"]
                 corpo_punti = ""
                 for idx, punto in enumerate(n['punti']):
@@ -242,7 +242,7 @@ if st.session_state.notizie_reali:
                 
                 extra_html = f"<p style='font-size: 16px; line-height: 1.6; color: #00ff66; margin-top: 10px;'>💎 Nota extra: {dettaglio_extra} 🚀</p>" if dettaglio_extra else ""
                 
-                # Stampiamo l'articolo pulito senza errori di codice finali
+                # Articolo stampato correttamente senza stringhe HTML a vista
                 st.markdown(f"""
                 <div class="article-box">
                     <h3>📝 ARTICOLO LAMPO E COLORATO</h3>
